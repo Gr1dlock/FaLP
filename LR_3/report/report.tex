@@ -79,28 +79,59 @@ LIST и CONS являются функциями создания списков
 Составить диаграмму вычисления следующих выражений:
 \begin{enumerate}
 \item (equal 3 (abs - 3))
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP1.png}}
+\end{figure}
 \item (equal (+ 1 2) 3)
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP2.png}}
+\end{figure}
+\newpage
 \item (equal (* 4 7) 21)
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP3.png}}
+\end{figure}
 \item (equal (* 2 3) (+ 7 2))
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP4.png}}
+\end{figure}
+\newpage
 \item (equal (- 7 3) (* 3 2))
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP5.png}}
+\end{figure}
 \item (equal (abs (- 2 4)) 3))\\
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP6.png}}
+\end{figure}
 \end{enumerate}
 
+\newpage
+\vspace*{10mm}
 {\LARGE Задание №2}\\
 
 Написать функцию, вычисляющую гипотенузу прямоугольного треугольника по заданным катетам и составить диаграмму её вычисления.
 
 (defun hyp (a b) (sqrt (+ (* a a) (* b b))))
 
-Пример: (hyp 3 4) -> 5.0\\
+Пример: (hyp 3 4) -> 5.0
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP7.png}}
+\end{figure}
 
+\newpage
+\vspace*{10mm}
 {\LARGE Задание №3}\\
 
 Написать функцию, вычисляющую объем параллелепипеда по 3-м его сторонам, и составить диаграмму ее вычисления.
 
 (defun vol (a b h) (* a b h))
 
-Пример (vol 1 2 3) -> 6\\
+Пример (vol 1 2 3) -> 6
+
+\begin{figure}[ht!]
+\center{\includegraphics[scale=0.8]{FaLP8.png}}
+\end{figure}
 
 {\LARGE Задание №4}\\
 Каковы результаты вычисления следующих выражений?
@@ -124,6 +155,7 @@ LIST и CONS являются функциями создания списков
 Результат:The value (LENGTH '(1 2 3)) is not of type NUMBER, т.к. '(LENGTH '(1 2 3)) не вычисляется из-за '.
 \end{enumerate}
 
+\vspace*{10mm}
 {\LARGE Задание №5}\\
 
 Написать функцию longer\_then от двух списков-аргументов, которая возвращает T, если первый аргумент имеет большую длину.
@@ -153,6 +185,7 @@ LIST и CONS являются функциями создания списков
 Результат: ONE\\
 \end{enumerate}
 
+\vspace*{10mm}
 {\LARGE Задание №7}\\
 
 Дана функция (defun mystery (x) (list (second x) (first x))). Какие результаты вычисления следующих выражений?
