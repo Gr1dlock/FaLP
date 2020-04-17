@@ -1,0 +1,238 @@
+\documentclass[a4paper,12pt]{article}
+
+\input{preamble}
+
+\begin{document}
+	
+	\include{title}
+	
+	\textbf{Цель работы}: получить навыки построения модели предметной области, разработки и оформления программы на Prolog, изучить принципы, логику формирования программы и отдельные шаги выполнения программы на Prolog.\\
+	
+	\textbf{Задачи работы}: приобрести навыки декларативного описания предметной области с использованием фактов и правил.
+	Изучить способы использования термов, переменных, фактов и правил в программе на Prolog, принципы  и правила сопоставления и отождествления, порядок унификации.
+	
+	\section*{Задание}
+	
+	Составить программу, т.е. модель предметной области – базу знаний, объединив в ней информацию – знания:
+	\begin{itemize}
+		\item «Телефонный справочник»: Фамилия, №тел, Адрес – структура (Город, Улица, №дома, №кв),
+		\item «Автомобили»: Фамилия\_владельца, Марка, Цвет, Стоимость, и др.,
+		\item «Вкладчики банков»: Фамилия, Банк, счет, сумма, др.
+	\end{itemize}
+	
+	Владелец может иметь несколько телефонов, автомобилей, вкладов (Факты).
+	
+	Используя правила, обеспечить возможность поиска:
+	\begin{enumerate}
+		\item 
+		\begin{enumerate}
+			\item По № телефона найти: Фамилию, Марку автомобиля, Стоимость автомобиля (может быть несколько),
+			\item Используя сформированное в пункте а) правило, по № телефона найти: только Марку автомобиля (автомобилей может быть несколько),
+		\end{enumerate}
+		\item Используя простой, не составной вопрос: по Фамилии (уникальна в городе, но в разных городах есть однофамильцы) и Городу проживания найти:  Улицу проживания, Банки, в которых есть вклады и №телефона.
+	\end{enumerate}
+	
+	Для задания1 и задания2: 
+	для одного из вариантов ответов, и для а) и для в), описать словесно порядок поиска ответа на вопрос, указав, как выбираются знания, и, при этом, для каждого этапа унификации, выписать подстановку – наибольший общий унификатор, и соответствующие примеры термов.
+	
+	\newpage
+	
+	\subsection*{Текст программы}
+	\begin{lstlisting}[caption=База знаний]
+	domains 
+	name, phone, city, street, color, brand, money , bank, account = symbol. 
+	house, apartment = integer. 
+	addr = address(city, street, house, apartment). 
+	
+	predicates 
+	phonebook(name, phone, addr). 
+	car(name, brand, color, money). 
+	depositor(name, bank, account, money). 
+	find_name_brand_money(phone, name, brand, money). 
+	find_brand(phone, brand). 
+	find_street_bank_phone(name, city, street, bank, phone). 
+	find_name_city_phone_bank(brand, color, name, city, phone, bank). 
+	
+	clauses 
+	phonebook("Ivanov", "79836457823", address("Moscow", "Tverskaya", 4, 112)). 
+	phonebook("Sidorov", "79285920831", address("Tver", "Orlova", 17, 22)). 
+	phonebook("Ivanov", "79260112361", address("Moscow", "Tverskaya", 4, 112)). 
+	phonebook("Petrov", "79256239576", address("St-Petersburg", "Leninskaya", 19, 26)). 
+	phonebook("Sidorov", "79278456344", address("Moscow", "Puskinskaya", 2, 34)). 
+	
+	car("Petrov", "BMW", "Black", "3500000"). 
+	car("Sidorov", "BMW", "Red", "2000000"). 
+	car("Petrov", "Audi", "Blue", "3000000"). 
+	car("Ivanov", "Mercedes", "Black", "5000000"). 
+	car("Ivanov", "Audi", "Blue", "3000000"). 
+	
+	depositor("Sidorov", "Sberbank", "1238123127", "5000000"). 
+	depositor("Ivanov", "Tinkoff", "5872874928", "300000"). 
+	depositor("Sidorov", "VTB", "123123213", "2000000"). 
+	depositor("Petrov", "Sberbank", "123213213", "3000000"). 
+	
+	find_name_brand_money(Phone, Name, Brand, Money) :- phonebook(Name, Phone, _), car(Name, Brand, _, Money). 
+	find_brand(Phone, Brand) :- find_name_brand_money(Phone, _, Brand, _). 
+	find_street_bank_phone(Name, City, Street, Bank, Phone) :- phonebook(Name, Phone, address(City, Street, _, _)), depositor(Name, Bank, _, _). 
+	find_name_city_phone_bank(Brand, Color, Name, City, Phone, Bank) :- car(Name, Brand, Color, _), phonebook(Name, Phone, address(City, _, _, _)), depositor(Name, Bank, _, _).
+	\end{lstlisting}
+	Предикат \emph{find\_name\_brand\_money(phone, name, brand, money).} обеспечивает возможность поиска имени, модели машины и стоимости машины по номеру телефона, предикат \emph{find\_brand(phone, brand).} обеспечивает возможность найти модель машины по номеру телефона, а предикат \emph{find\_street\_bank\_phone(name, city, street, bank, phone).} позволяет найти улицу проживания, банк и номер телефона по имени и городу.
+	
+	\newpage
+	
+	\subsection*{Примеры работы:}
+	
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|>{\centering}X|>{\centering}X|}
+			\hline
+			goal & Результат \tabularnewline
+			\hline
+			find\_name\_brand\_money("79260112361"{}, Name, Brand, Money). &
+			Name=Ivanov, Brand=Mercedes, Money=5000000 \\
+			1 Solution\tabularnewline
+			\hline
+			find\_brand("79256239576"{}, Brand). &
+			Brand=BMW \\
+			Brand=Audi \\
+			2 Solutions\tabularnewline
+			\hline
+			find\_street\_bank\_phone("Sidorov"{}, "Moscow"{}, Street, Bank, Phone). & Street=Puskinskaya, Bank=Sberbank, Phone=79278456344 \\
+			Street=Puskinskaya, Bank=VTB, Phone=79278456344 \\
+			2 Solutions \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}
+	
+	Порядок формирования ответа для 1-го вопроса:
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
+			\hline
+			1 & Сравниваются find\_name\_brand\_money( "79260112361"{}, Name, Brand, Money) и find\_name\_brand\_money(Phone, Name, Brand, Money), Phone конкретизируется "79260112361"{}, Name и Name становятся сцепленными, Brand и Brand становятся сцепленными, Money и Money становятся сцепленными & Прямой ход \tabularnewline
+			\hline
+			2 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79260112361" сравнивается с "79836457823" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			3 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), Name конкретизируется "Sidorov"{}, "79260112361" сравнивается с "79285920831" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}
+	\newpage
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			4 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79260112361" сравнивается с "79260112361" & Прямой ход, занесение Name="Ivanov" в результирующую ячейку \tabularnewline
+			\hline
+			5 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), сравниваются "Ivanov" и "Petrov" & Откат, переход к следующему предложению предиката car \tabularnewline
+			\hline
+			6 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Ivanov"{}, "Mercedes"{}, "Black"{}, "5000000"), сравниваются "Ivanov" и "Ivanov"{}, Brand конкретизируется "Mercedes"{}, Money конкретизируется "5000000" & Прямой ход, занесение Brand="Mercedes"{}, Money="5000000" в результирующую ячейку \tabularnewline
+			\hline
+			7 & Результат: подстановка Name="Ivanov"{}, Brand="Mercedes"{}, Money="5000000" &  \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}	
+	
+	Порядок формирования ответа для 2-го вопроса:
+	\begin{table}[!ht]
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
+			\hline
+			1 & Сравниваются find\_brand("79256239576"{}, Brand) и find\_brand(Phone, Brand), Phone конкретизируется "79256239576"{}, Brand и Brand становятся сцепленными  & Прямой ход \tabularnewline
+			\hline
+			2 & Сравниваются find\_name\_brand\_money( "79256239576"{}, \_, Brand, \_) find\_name\_brand\_money(Phone, Name, Brand, Money), Phone конкретезируется "79256239576"{}, Brand и Brand становятся сцепленными &  Прямой ход  \tabularnewline
+			\hline
+			3 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79256239576" сравнивается с "79836457823" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}
+	\newpage
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			4 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), Name конкретизируется "Sidorov"{}, "79256239576" сравнивается с "79285920831" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			5 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79256239576" сравнивается с "79260112361" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			6 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya{}", 19, 26)), Name конкретизируется "Petrov"{}, "79256239576" сравнивается с "79256239576" & Прямой ход \tabularnewline
+			\hline
+			7 & Сравниваются car("Petrov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), сравниваются "Petrov" и "Petrov"{}, Brand конкретизируется  "BMW"{}, Money конкретизируется "3500000" & Прямой ход, занесение Brand="BMW" в результирующую ячейку \tabularnewline
+			\hline
+			8 & Результат: подстановка Brand="BMW" &  \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}		
+	
+	Порядок формирования ответа для 3-го вопроса:
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
+			\hline
+			1 & Сравниваются find\_street\_bank\_phone("Sidorov"{}, "Moscow"{}, Street, Bank, Phone) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), Name конкретизируется "Sidorov"{}, City конкретизируется "Moscow"{}, Street и Street становятся сцепленными, Bank и Bank становятся сцепленными, Phone и Phone становятся сцепленными & Прямой ход \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}
+	\newpage
+	\begin{table}[ht!] 
+		\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+			\hline
+			2 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), "Sidorov" сравнивается с "Ivanov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			3 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), "Sidorov" сравнивается с "Sidorov"{}, Phone конкретизируется  "79285920831" & Прямой ход, занесение Phone="79285920831" в результирующую ячейку \tabularnewline
+			\hline
+			4  & Сравниваются address("Moscow"{}, Street, \_,\_)  и address("Tver"{}, "Orlova"{}, 17, 22), "Moscow" сравнивается с "Tver" & Откат, реконкретизация Phone, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			5 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)) , "Sidorov" сравнивается с "Ivanov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			6 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)) , "Sidorov" сравнивается с "Petrov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+			\hline
+			7 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), "Sidorov" сравнивается с "Sidorov"{}, Phone конкретизируется "79278456344" & Прямой ход, занесение Phone="79278456344" в результирующую ячейку \tabularnewline
+			\hline
+			8  & Сравниваются address("Moscow"{}, Street, \_,\_)  и address("Moscow"{}, "Puskinskaya"{}, 2, 34), "Moscow" сравнивается с "Moscow"{}, Street конкретизируется "Puskinskaya"  & Прямой ход, занесение  Street="Puskinskaya" в результирующую ячейку \tabularnewline
+			\hline
+			9 & Сравнивается depositor("Sidorov"{}, Bank, \_, \_) и depositor("Sidorov"{}, "Sberbank"{}, "1238123127"{}, "5000000"), "Sidorov" сравнивается с "Sidorov"{}, Bank конкретизируется "Sberbank" & Прямой ход, занесение Bank="Sberbank" в результирующую ячейку\tabularnewline
+			\hline
+			10 & Результат: подстановка Phone="79278456344"{}, Street="Puskinskaya"{}, Bank="Sberbank" & \tabularnewline
+			\hline
+		\end{tabularx}
+	\end{table}	
+	
+\section*{Теоретические вопросы}
+	
+\subsection*{В какой части правила сформулировано знание? Это знание о чем, с формальной точки зрения?}
+Правило состоит из заголовка и тела, знание о некоторой предметной области содержится в заголовке. Заголовок как составной терм  $f(t_1, t_2, \dots,t_m)$ содержит знание об отношении между его аргументами $t_1, t_2, \dots ,t_m$.
+\subsection*{Что такое процедура?}
+Процедура - совокупность правил, заголовки которых имеют одинаковые функторы и одинаковое число аргументов, т.е. это совокупность правил, описывающих определенное отношение.
+\subsection*{Сколько в БЗ текущего задания процедур?}
+В базе знаний текущего задания 7 процедур:
+\begin{enumerate}
+	\item phonebook(name, phone, addr) - процедура для телефонной книги,
+	\item car(name, brand, color, money) - процедура для владения машиной,
+	\item depositor(name, bank, account, money) - процедура для банковских вкладов,
+	\item find\_name\_brand\_money(phone, name, brand, money) - процедура для возможности поиска имени, марки машины и ее стоимости по номеру телефона,
+	\item find\_brand(phone, brand) - процедура для возможности поиска марки машины по номеру телефона,
+	\item find\_street\_bank\_phone(name, city, street, bank, phone) - процедура для возможности поиска улицы, банка и номера телефона по имени и городу,
+	\item find\_name\_city\_phone\_bank(brand, color, name, city, phone, bank) - процедура для возможности поиска имени, города, номера телефона и банка по марке машины и ее цвету.
+\end{enumerate}
+\subsection*{Что такое пример терма, это частный случай терма, пример? Как строится пример? }
+Пусть $\Theta =  \{X_1 = t_1, X_2= t_2, \dots , X_n = t_n \}$   –   подстановка, $A$ - терм. Результат применения подстановки к терму обозначается $A\Theta$.
+
+Примером терма $A$ называется терм $B$, если существует подстановка $\Theta$ такая, что $B = A\Theta$.
+
+Фактически это является более частным случаем терма, так как одна или несколько переменных терма конкретизируются.
+
+Примеры термов строятся в ходе логического вывода. Для построения примера терма его переменные конкретизируются.
+\subsection*{Что такое наиболее общий пример?}
+Терм S называется более общим чем терм Т, если T является примером S, а S не является примером T.
+
+S называется наиболее общим примером T1 и T2, если S такой их общий пример, который является более общим по отношению к любому другому их примеру. 
+
+Пример:
+
+Пусть есть терм $T=f(Х_1, Х_2, \dots, Х_n)$. Если одну переменную конкретизировать значением, то это будет пример: $f(a, Х_2, Х_n)$, но более общий чем пример: $f(a, b, Х_n)$.
+\subsection*{Назначение и результат работы алгоритма унификации. Что значит двунаправленная передача параметров при работе алгоритма унификации, поясните на примере одного из случаев пункта  3.}
+\subsection*{В каком случае запускается механизм отката?}
+\subsection*{Виды и назначение переменных в Prolog. Примеры из задания.  Почему использованы те или другие переменные (примеры из задания)?}
+
+\end{document}
