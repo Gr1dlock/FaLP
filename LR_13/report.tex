@@ -49,10 +49,12 @@ phonebook(name, phone, addr).
 car(name, brand, color, money). 
 depositor(name, bank, account, money). 
 find_name_brand_money(phone, name, brand, money). 
-find_brand(phone, brand). 
 find_street_bank_phone(name, city, street, bank, phone). 
 
-clauses 
+clauses
+find_name_brand_money(Phone, Name, Brand, Money) :- phonebook(Name, Phone, _), car(Name, Brand, _, Money). 
+find_street_bank_phone(Name, City, Street, Bank, Phone) :- phonebook(Name, Phone, address(City, Street, _, _)), depositor(Name, Bank, _, _). 
+
 phonebook("Ivanov", "79836457823", address("Moscow", "Tverskaya", 4, 112)). 
 phonebook("Sidorov", "79285920831", address("Tver", "Orlova", 17, 22)). 
 phonebook("Ivanov", "79260112361", address("Moscow", "Tverskaya", 4, 112)). 
@@ -69,11 +71,8 @@ depositor("Ivanov", "Tinkoff", "5872874928", "300000").
 depositor("Sidorov", "VTB", "123123213", "2000000"). 
 depositor("Petrov", "Sberbank", "123213213", "3000000"). 
 
-find_name_brand_money(Phone, Name, Brand, Money) :- phonebook(Name, Phone, _), car(Name, Brand, _, Money). 
-find_brand(Phone, Brand) :- find_name_brand_money(Phone, _, Brand, _). 
-find_street_bank_phone(Name, City, Street, Bank, Phone) :- phonebook(Name, Phone, address(City, Street, _, _)), depositor(Name, Bank, _, _). 
 \end{lstlisting}
-Предикат \emph{find\_name\_brand\_money(phone, name, brand, money).} обеспечивает возможность поиска имени, модели машины и стоимости машины по номеру телефона, предикат \emph{find\_brand(phone, brand).} обеспечивает возможность найти модель машины по номеру телефона, а предикат \emph{find\_street\_bank\_phone(name, city, street, bank, phone).} позволяет найти улицу проживания, банк и номер телефона по имени и городу.
+Предикат \emph{find\_name\_brand\_money(phone, name, brand, money)} обеспечивает возможность поиска имени, марки автомобиля и его стоимости по номеру телефона, предикат \emph{find\_street\_bank\_phone(name, city, street, bank, phone).} позволяет найти улицу проживания, банк и номер телефона по имени и городу.
 
  \newpage
  
@@ -88,7 +87,7 @@ find_street_bank_phone(Name, City, Street, Bank, Phone) :- phonebook(Name, Phone
 		Name=Ivanov, Brand=Mercedes, Money=5000000 \\
 		1 Solution\tabularnewline
 		\hline
-			find\_brand("79256239576"{}, Brand). &
+		find\_name\_brand\_money("79256239576"{}, \_, Brand, \_). &
 		Brand=BMW \\
 		Brand=Audi \\
 		2 Solutions\tabularnewline
@@ -100,17 +99,21 @@ Street=Puskinskaya, Bank=VTB, Phone=79278456344 \\
 	\end{tabularx}
 \end{table}
 
-Порядок формирования ответа для 1-го вопроса:
+Порядок формирования результата для 1-го вопроса:
 \begin{table}[ht!] 
 	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
 		\hline
 		№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
 		\hline
-		1 & Сравниваются find\_name\_brand\_money( "79260112361"{}, Name, Brand, Money) и find\_name\_brand\_money(Phone, Name, Brand, Money), Phone конкретизируется "79260112361"{}, Name и Name становятся сцепленными, Brand и Brand становятся сцепленными, Money и Money становятся сцепленными & Прямой ход \tabularnewline
+		1 & Сравниваются find\_name\_brand\_money( "79260112361"{}, Name, Brand, Money) и find\_name\_brand\_money(Phone, Name, Brand, Money), подстановка - \{Phone="79260112361"{}\} & Прямой ход \tabularnewline
 		\hline
-		2 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79260112361" сравнивается с "79836457823" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+		2 & Сравниваются phonebook(Name, "79260112361"{}, \_) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		3 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), Name конкретизируется "Sidorov"{}, "79260112361" сравнивается с "79285920831" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
+		3 & Сравниваются phonebook(Name, "79260112361"{}, \_) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		4 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), термы "79260112361"{} и "79836457823"{} не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		5 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), термы "79260112361" и "79285920831" не унифицируемы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
 		\hline
 	\end{tabularx}
 \end{table}
@@ -118,79 +121,146 @@ Street=Puskinskaya, Bank=VTB, Phone=79278456344 \\
 \begin{table}[ht!] 
 	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
 		\hline
-		4 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79260112361" сравнивается с "79260112361" & Прямой ход, занесение Name="Ivanov" в результирующую ячейку \tabularnewline
+		6 & Сравниваются phonebook(Name, "79260112361"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), подстановка - \{Name="Ivanov"{}, Phone="79260112361"{}, \_=address("Moscow"{}, "Tverskaya"{}, 4, 112)\} & Прямой ход, занесение Name="Ivanov" в результирующую ячейку \tabularnewline
 		\hline
-		5 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), сравниваются "Ivanov" и "Petrov" & Откат, переход к следующему предложению предиката car \tabularnewline
+		7 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		6 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Ivanov"{}, "Mercedes"{}, "Black"{}, "5000000"), сравниваются "Ivanov" и "Ivanov"{}, Brand конкретизируется "Mercedes"{}, Money конкретизируется "5000000" & Прямой ход, занесение Brand="Mercedes"{}, Money="5000000" в результирующую ячейку \tabularnewline
+		8 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		7 & Результат: подстановка Name="Ivanov"{}, Brand="Mercedes"{}, Money="5000000" &  \tabularnewline
+		9 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		10 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		11 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		12 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и  phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		13 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и  phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		14 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), термы "Ivanov" и "Petrov" не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		15 & Сравниваются car("Ivanov"{}, Brand, \_, Money) и car("Ivanov"{}, "Mercedes"{}, "Black"{}, "5000000"), подстановка - \{Brand="Mercedes"{}, \_="Black"{}, Money="5000000"\} & Прямой ход, занесение Brand="Mercedes"{}, Money="5000000" в результирующую ячейку \tabularnewline
+		\hline
+	\end{tabularx}
+\end{table}
+\newpage
+\begin{table}[ht!] 
+	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+		\hline
+		16 & Результат: подстановка \{Name="Ivanov"{}, Brand="Mercedes"{}, Money="5000000"\} &  \tabularnewline
 		\hline
 	\end{tabularx}
 \end{table}	
 
-Порядок формирования ответа для 2-го вопроса:
+Порядок формирования результата для 2-го вопроса:
 \begin{table}[!ht]
 	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
-	\hline
-	№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
-	\hline
-	1 & Сравниваются find\_brand("79256239576"{}, Brand) и find\_brand(Phone, Brand), Phone конкретизируется "79256239576"{}, Brand и Brand становятся сцепленными  & Прямой ход \tabularnewline
-	\hline
-	2 & Сравниваются find\_name\_brand\_money( "79256239576"{}, \_, Brand, \_) find\_name\_brand\_money(Phone, Name, Brand, Money), Phone конкретезируется "79256239576"{}, Brand и Brand становятся сцепленными &  Прямой ход  \tabularnewline
-	\hline
-	3 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79256239576" сравнивается с "79836457823" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
-	\hline
-				\end{tabularx}
+		\hline
+		№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
+		\hline
+		1 & Сравниваются find\_name\_brand\_money( "79256239576"{}, \_, Brand, \_) и find\_name\_brand\_money(Phone, Name, Brand, Money), подстановка - \{Phone="79256239576"\} &  Прямой ход  \tabularnewline
+		\hline
+		2 & Сравниваются phonebook(Name, "79256239576"{}, \_) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		3 & Сравниваются phonebook(Name, "79256239576"{}, \_) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		4 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), термы "79256239576" и "79836457823" не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		5 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), термы "79256239576" и "79285920831" не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		6 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), термы "79256239576" и "79260112361" не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		7 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya{}", 19, 26)), подстановка - \{Name="Petrov"{}, \_=address("St-Petersburg"{}, "Leninskaya{}", 19, 26)\} & Прямой ход \tabularnewline
+		\hline
+	\end{tabularx}
 \end{table}
 \newpage
 \begin{table}[ht!] 
-\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
-\hline
-	4 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), Name конкретизируется "Sidorov"{}, "79256239576" сравнивается с "79285920831" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
-	\hline
-	5 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), Name конкретизируется "Ivanov"{}, "79256239576" сравнивается с "79260112361" & Откат, реконкретизация Name, переход к следующему предложению предиката phonebook \tabularnewline
-	\hline
-	6 & Сравниваются phonebook(Name, "79256239576"{}, \_) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya{}", 19, 26)), Name конкретизируется "Petrov"{}, "79256239576" сравнивается с "79256239576" & Прямой ход \tabularnewline
-	\hline
-	7 & Сравниваются car("Petrov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), сравниваются "Petrov" и "Petrov"{}, Brand конкретизируется  "BMW"{}, Money конкретизируется "3500000" & Прямой ход, занесение Brand="BMW" в результирующую ячейку \tabularnewline
-	\hline
-	8 & Результат: подстановка Brand="BMW" &  \tabularnewline
-	\hline
+	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+		\hline
+		8 & Сравниваются car("Petrov"{}, Brand, \_, Money) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		9 & Сравниваются car("Petrov"{}, Brand, \_, Money) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		10 & Сравниваются car("Petrov"{}, Brand, \_, Money) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		11 & Сравниваются car("Petrov"{}, Brand, \_, Money) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		12 & Сравниваются car("Petrov"{}, Brand, \_, Money) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		13 & Сравниваются car("Petrov"{}, Brand, \_, Money) и  phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		14 & Сравниваются car("Petrov"{}, Brand, \_, Money) и  phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		15 & Сравниваются car("Petrov"{}, Brand, \_, Money) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), подстановка - \{Brand="BMW"{}, \_="Black"{}, Money="3500000"\} & Прямой ход, занесение Brand="BMW" в результирующую ячейку \tabularnewline
+		\hline
+		16 & Результат: подстановка \{Brand="BMW"\} &  \tabularnewline
+		\hline
 \end{tabularx}
-\end{table}		
-
-Порядок формирования ответа для 3-го вопроса:
+\end{table}
+		
+\newpage
+Порядок формирования результата для 3-го вопроса:
 \begin{table}[ht!] 
 	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
 		\hline
 		№ шага & Сравниваемые термы; результат; подстановка, если есть & Дальнейшие действия: прямой ход или откат (к чему приводит?)\tabularnewline
 		\hline
-		1 & Сравниваются find\_street\_bank\_phone("Sidorov"{}, "Moscow"{}, Street, Bank, Phone) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), Name конкретизируется "Sidorov"{}, City конкретизируется "Moscow"{}, Street и Street становятся сцепленными, Bank и Bank становятся сцепленными, Phone и Phone становятся сцепленными & Прямой ход \tabularnewline
+		1 & Сравниваются find\_street\_bank\_phone("Sidorov"{}, "Moscow"{}, Street, Bank, Phone) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-								\end{tabularx}
-	\end{table}
+		2 & Сравниваются find\_street\_bank\_phone("Sidorov"{}, "Moscow"{}, Street, Bank, Phone) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), подстановка - \{Name="Sidorov"{}, City="Moscow\} & Прямой ход \tabularnewline
+		\hline
+		3 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		4 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		5 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), термы "Sidorov" и "Ivanov" не унифицируемы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		6 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), термы address("Moscow"{}, Street, \_, \_) и address("Tver"{}, "Orlova"{}, 17, 22) не унифицируемы, так как термы "Moscow"{} и "Tver" не унифицируемы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+		7 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), термы "Sidorov"{} и "Ivanov"{} не унифицируемы & Термы не унифицируемы, переход к следующему предложению\tabularnewline
+		\hline
+	\end{tabularx}
+\end{table}
 \newpage
 \begin{table}[ht!] 
-\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
-\hline
-		2 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), "Sidorov" сравнивается с "Ivanov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
 		\hline
-		3 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), "Sidorov" сравнивается с "Sidorov"{}, Phone конкретизируется  "79285920831" & Прямой ход, занесение Phone="79285920831" в результирующую ячейку \tabularnewline
+		8 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и  phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)), термы "Sidorov"{} и "Petrov"{} не унифицируемы & Термы не унифицируемы, откат, переход к следующему предложению\tabularnewline
 		\hline
-		4  & Сравниваются address("Moscow"{}, Street, \_,\_)  и address("Tver"{}, "Orlova"{}, 17, 22), "Moscow" сравнивается с "Tver" & Откат, реконкретизация Phone, переход к следующему предложению предиката phonebook \tabularnewline
+		9 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_, \_)) и  phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), подстановка \{Phone="79278456344"{}, Street="Puskinskaya"{}, \_=2, \_=34\} & Прямой ход, занесение Phone="79278456344"{}, Street="Puskinskaya"{} в результирующую ячейку\tabularnewline
 		\hline
-		5 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)) , "Sidorov" сравнивается с "Ivanov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+		10 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и find\_name\_brand\_money(Phone, Name, Brand, Money), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		6 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)) , "Sidorov" сравнивается с "Petrov" & Откат, переход к следующему предложению предиката phonebook \tabularnewline
+		11 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и find\_street\_bank\_phone(Name, City, Street, Bank, Phone), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		7 & Сравниваются phonebook("Sidorov"{}, Phone, address("Moscow"{}, Street, \_,\_)) и phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), "Sidorov" сравнивается с "Sidorov"{}, Phone конкретизируется "79278456344" & Прямой ход, занесение Phone="79278456344" в результирующую ячейку \tabularnewline
+		12 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и phonebook("Ivanov"{}, "79836457823"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		8  & Сравниваются address("Moscow"{}, Street, \_,\_)  и address("Moscow"{}, "Puskinskaya"{}, 2, 34), "Moscow" сравнивается с "Moscow"{}, Street конкретизируется "Puskinskaya"  & Прямой ход, занесение  Street="Puskinskaya" в результирующую ячейку \tabularnewline
+		13 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и phonebook("Sidorov"{}, "79285920831"{}, address("Tver"{}, "Orlova"{}, 17, 22)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		9 & Сравнивается depositor("Sidorov"{}, Bank, \_, \_) и depositor("Sidorov"{}, "Sberbank"{}, "1238123127"{}, "5000000"), "Sidorov" сравнивается с "Sidorov"{}, Bank конкретизируется "Sberbank" & Прямой ход, занесение Bank="Sberbank" в результирующую ячейку\tabularnewline
+		14 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и phonebook("Ivanov"{}, "79260112361"{}, address("Moscow"{}, "Tverskaya"{}, 4, 112)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
 		\hline
-		10 & Результат: подстановка Phone="79278456344"{}, Street="Puskinskaya"{}, Bank="Sberbank" & \tabularnewline
+		15 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и phonebook("Petrov"{}, "79256239576"{}, address("St-Petersburg"{}, "Leninskaya"{}, 19, 26)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		16 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и phonebook("Sidorov"{}, "79278456344"{}, address("Moscow"{}, "Puskinskaya"{}, 2, 34)), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		17 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и car("Petrov"{}, "BMW"{}, "Black"{}, "3500000"), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+	\end{tabularx}
+\end{table}
+\newpage
+\begin{table}[ht!] 
+	\begin{tabularx}{\linewidth}{|c|>{\centering}X|>{\centering}X|}
+		\hline
+		18 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и car("Ivanov"{}, "Mercedes"{}, "Black"{}, "5000000"), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		19 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и car("Sidorov"{}, "BMW"{}, "Red"{}, "2000000"), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		20 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и car("Petrov"{}, "Audi"{}, "Blue"{}, "3000000"), они имеют разные функторы & Термы не унифицируемы, переход к следующему предложению \tabularnewline
+		\hline
+		21 & Сравниваются depositor("Sidorov"{}, Bank, \_, \_) и depositor("Sidorov"{}, "Sberbank"{}, "1238123127"{}, "5000000"), подстановка \{Bank="Sberbank"{}, \_="1238123127"{}, \_="5000000"\}& Прямой ход, занесение Bank="Sberbank" в результирующую ячейку\tabularnewline
+		\hline
+		22 & Результат: подстановка \{Phone="79278456344"{}, Street="Puskinskaya"{}, Bank="Sberbank"\} & \tabularnewline
 		\hline
 	\end{tabularx}
 \end{table}	
